@@ -1,7 +1,24 @@
 <!DOCTYPE html>
 <html>
-    <script src="https://aframe.io/releases/0.8.2/aframe.min.js"></script>
-    <script src="https://cdn.rawgit.com/jeromeetienne/AR.js/1.6.2/aframe/build/aframe-ar.js"></script>
+    <head>
+        <script src="https://aframe.io/releases/0.8.2/aframe.min.js"></script>
+        <script src="https://cdn.rawgit.com/jeromeetienne/AR.js/1.6.2/aframe/build/aframe-ar.js"></script>
+        <style>
+            .btns {
+                position: absolute;
+                bottom: 20px;
+                left: 0;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                gap: 10px;
+                width: 100vw;
+            }
+            button {
+                font-size: 24px;
+            }
+        </style>
+    </head>
     <body style="margin: 0px; overflow: hidden">
         <a-scene
             embedded
@@ -11,16 +28,51 @@
         >
             <a-assets>
                 <a-asset-item
-                    id="curryModel"
-                    src="model/curry.glb"
+                    id="chicken-meal"
+                    src="models/chicken-meal.glb"
+                ></a-asset-item>
+                <a-asset-item
+                    id="chicken-rice"
+                    src="models/chicken-rice.glb"
+                ></a-asset-item>
+                <a-asset-item id="curry" src="models/curry.glb"></a-asset-item>
+                <a-asset-item id="dish" src="models/dish.glb"></a-asset-item>
+                <a-asset-item id="food" src="models/food.glb"></a-asset-item>
+                <a-asset-item
+                    id="fried-rice"
+                    src="models/fried-rice.glb"
+                ></a-asset-item>
+                <a-asset-item
+                    id="milk-cookies"
+                    src="models/milk-cookies.glb"
+                ></a-asset-item>
+                <a-asset-item id="momos" src="models/momos.glb"></a-asset-item>
+                <a-asset-item id="pizza" src="models/pizza.glb"></a-asset-item>
+                <a-asset-item
+                    id="rice-bowl"
+                    src="models/rice-bowl.glb"
+                ></a-asset-item>
+                <a-asset-item
+                    id="roti-canai"
+                    src="models/roti-canai.glb"
+                ></a-asset-item>
+                <a-asset-item
+                    id="sandwich"
+                    src="models/sandwich.glb"
+                ></a-asset-item>
+                <a-asset-item
+                    id="omelette"
+                    src="models/omelette.glb"
                 ></a-asset-item>
             </a-assets>
 
+            <!-- <a-marker type="pattern" url="patterns/pattern-marker.patt"> -->
             <a-marker preset="hiro">
                 <a-entity
-                    gltf-model="#curryModel"
+                    id="model-entity"
+                    gltf-model="#curry"
                     position="0 0 0"
-                    scale="0.25 0.25 0.25"
+                    scale=".1 .1 .1"
                 >
                     <a-animation
                         attribute="rotation"
@@ -30,9 +82,87 @@
                         easing="linear"
                     ></a-animation>
                 </a-entity>
+                <a-text
+                    id="txt1"
+                    value="Fried Rice - $2"
+                    align="center"
+                    position="0 2 0"
+                    width="5"
+                    color="white"
+                ></a-text>
+                <a-text
+                    id="txt2"
+                    value="Fried Rice - $2"
+                    align="center"
+                    position="0 2 0"
+                    width="5"
+                    color="white"
+                    rotation="0 180 0"
+                ></a-text>
             </a-marker>
 
             <a-entity camera></a-entity>
         </a-scene>
+        <div class="btns">
+            <button id="btn1">Previous</button>
+            <button id="btn2">Next</button>
+        </div>
+        <script>
+            window.onload = () => {
+                const elem = document.getElementById("model-entity");
+                const btn1 = document.getElementById("btn1");
+                const btn2 = document.getElementById("btn2");
+                const txt1 = document.getElementById("txt1");
+                const txt2 = document.getElementById("txt2");
+                let indx = 0;
+                const arr = [
+                    ["curry", "0 0 0", ".4 .4 .4", "Curry - 100 Rs"],
+                    [
+                        "chicken-meal",
+                        "0 0 0",
+                        "10 10 10",
+                        "Chicken Meal - 250 Rs",
+                    ],
+                    // ["chicken-rice", "0 0 0", "1 1 1"],
+                    // ["dish", "0 0 0", "1 1 1"],
+                    ["food", "0 0 0", "2 2 2", "I Don't Know - 150 Rs"],
+                    // ["fried-rice", "0 0 0", ".1 .1 .1"],
+                    [
+                        "milk-cookies",
+                        "0 0 0",
+                        "10 10 10",
+                        "Milk & Cookies - 60 Rs",
+                    ],
+                    ["momos", "0 0 0", "10 10 10", "Momos - 80 Rs"],
+                    ["pizza", "0 0 0", "8 8 8", "Pizza - 160 Rs"],
+                    ["rice-bowl", "0 0 0", ".3 .3 .3", "Rice - 120 Rs"],
+                    ["roti-canai", "0 0 0", "1 1 1", "Roti Sabji - 180 Rs"],
+                    ["sandwich", "0 0 0", ".1 .1 .1", "Sandwich - 100 Rs"],
+                    ["omelette", "0 0 0", "10 10 10", "Omelette - 50 Rs"],
+                ];
+
+                function change() {
+                    const modelId = arr[indx][0];
+                    console.log(`Switching model to: ${modelId}`);
+                    elem.setAttribute("gltf-model", `#${modelId}`);
+                    elem.setAttribute("position", arr[indx][1]);
+                    elem.setAttribute("scale", arr[indx][2]);
+                    txt1.setAttribute("value", arr[indx][3]);
+                    txt2.setAttribute("value", arr[indx][3]);
+                }
+
+                btn1.onclick = () => {
+                    indx = (indx - 1 + arr.length) % arr.length;
+                    change();
+                };
+
+                btn2.onclick = () => {
+                    indx = (indx + 1) % arr.length;
+                    change();
+                };
+
+                change();
+            };
+        </script>
     </body>
 </html>
