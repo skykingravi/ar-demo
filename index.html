@@ -17,60 +17,30 @@
             button {
                 font-size: 24px;
             }
+            .loading {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                font-size: 24px;
+                display: none;
+            }
         </style>
     </head>
     <body style="margin: 0px; overflow: hidden">
+        <div class="loading" id="loading">Loading...</div>
         <a-scene
             embedded
             arjs="sourceType: webcam; debugUIEnabled: false"
             vr-mode-ui="enabled: false"
             renderer="logarithmicDepthBuffer: true"
         >
-            <a-assets>
-                <a-asset-item
-                    id="chicken-meal"
-                    src="models/chicken-meal.glb"
-                ></a-asset-item>
-                <a-asset-item
-                    id="chicken-rice"
-                    src="models/chicken-rice.glb"
-                ></a-asset-item>
-                <a-asset-item id="curry" src="models/curry.glb"></a-asset-item>
-                <a-asset-item id="dish" src="models/dish.glb"></a-asset-item>
-                <a-asset-item id="food" src="models/food.glb"></a-asset-item>
-                <a-asset-item
-                    id="fried-rice"
-                    src="models/fried-rice.glb"
-                ></a-asset-item>
-                <a-asset-item
-                    id="milk-cookies"
-                    src="models/milk-cookies.glb"
-                ></a-asset-item>
-                <a-asset-item id="momos" src="models/momos.glb"></a-asset-item>
-                <a-asset-item id="pizza" src="models/pizza.glb"></a-asset-item>
-                <a-asset-item
-                    id="rice-bowl"
-                    src="models/rice-bowl.glb"
-                ></a-asset-item>
-                <a-asset-item
-                    id="roti-canai"
-                    src="models/roti-canai.glb"
-                ></a-asset-item>
-                <a-asset-item
-                    id="sandwich"
-                    src="models/sandwich.glb"
-                ></a-asset-item>
-                <a-asset-item
-                    id="omelette"
-                    src="models/omelette.glb"
-                ></a-asset-item>
-            </a-assets>
+            <a-assets></a-assets>
 
-            <!-- <a-marker type="pattern" url="patterns/pattern-marker.patt"> -->
             <a-marker preset="hiro">
                 <a-entity
                     id="model-entity"
-                    gltf-model="#curry"
+                    gltf-model=""
                     position="0 0 0"
                     scale=".1 .1 .1"
                 >
@@ -84,7 +54,7 @@
                 </a-entity>
                 <a-text
                     id="txt1"
-                    value="Fried Rice - $2"
+                    value="Loading..."
                     align="center"
                     position="0 2 0"
                     width="5"
@@ -92,7 +62,7 @@
                 ></a-text>
                 <a-text
                     id="txt2"
-                    value="Fried Rice - $2"
+                    value="Loading..."
                     align="center"
                     position="0 2 0"
                     width="5"
@@ -114,54 +84,108 @@
                 const btn2 = document.getElementById("btn2");
                 const txt1 = document.getElementById("txt1");
                 const txt2 = document.getElementById("txt2");
+                const loading = document.getElementById("loading");
                 let indx = 0;
+
                 const arr = [
-                    ["curry", "0 0 0", ".4 .4 .4", "Curry - 100 Rs"],
+                    [
+                        "curry",
+                        "models/curry.glb",
+                        "0 0 0",
+                        ".4 .4 .4",
+                        "Curry - 100 Rs",
+                    ],
                     [
                         "chicken-meal",
+                        "models/chicken-meal.glb",
                         "0 0 0",
                         "10 10 10",
                         "Chicken Meal - 250 Rs",
                     ],
-                    // ["chicken-rice", "0 0 0", "1 1 1"],
-                    // ["dish", "0 0 0", "1 1 1"],
-                    ["food", "0 0 0", "2 2 2", "I Don't Know - 150 Rs"],
-                    // ["fried-rice", "0 0 0", ".1 .1 .1"],
+                    [
+                        "food",
+                        "models/food.glb",
+                        "0 0 0",
+                        "2 2 2",
+                        "I Don't Know - 150 Rs",
+                    ],
                     [
                         "milk-cookies",
+                        "models/milk-cookies.glb",
                         "0 0 0",
                         "10 10 10",
                         "Milk & Cookies - 60 Rs",
                     ],
-                    ["momos", "0 0 0", "10 10 10", "Momos - 80 Rs"],
-                    ["pizza", "0 0 0", "8 8 8", "Pizza - 160 Rs"],
-                    ["rice-bowl", "0 0 0", ".3 .3 .3", "Rice - 120 Rs"],
-                    ["roti-canai", "0 0 0", "1 1 1", "Roti Sabji - 180 Rs"],
-                    ["sandwich", "0 0 0", ".1 .1 .1", "Sandwich - 100 Rs"],
-                    ["omelette", "0 0 0", "10 10 10", "Omelette - 50 Rs"],
+                    [
+                        "momos",
+                        "models/momos.glb",
+                        "0 0 0",
+                        "10 10 10",
+                        "Momos - 80 Rs",
+                    ],
+                    [
+                        "pizza",
+                        "models/pizza.glb",
+                        "0 0 0",
+                        "8 8 8",
+                        "Pizza - 160 Rs",
+                    ],
+                    [
+                        "rice-bowl",
+                        "models/rice-bowl.glb",
+                        "0 0 0",
+                        ".3 .3 .3",
+                        "Rice - 120 Rs",
+                    ],
+                    [
+                        "roti-canai",
+                        "models/roti-canai.glb",
+                        "0 0 0",
+                        "1 1 1",
+                        "Roti Sabji - 180 Rs",
+                    ],
+                    [
+                        "sandwich",
+                        "models/sandwich.glb",
+                        "0 0 0",
+                        ".1 .1 .1",
+                        "Sandwich - 100 Rs",
+                    ],
+                    [
+                        "omelette",
+                        "models/omelette.glb",
+                        "0 0 0",
+                        "10 10 10",
+                        "Omelette - 50 Rs",
+                    ],
                 ];
 
-                function change() {
+                function loadModel() {
+                    loading.style.display = "block"; // Show loading indicator
                     const modelId = arr[indx][0];
-                    console.log(`Switching model to: ${modelId}`);
-                    elem.setAttribute("gltf-model", `#${modelId}`);
-                    elem.setAttribute("position", arr[indx][1]);
-                    elem.setAttribute("scale", arr[indx][2]);
-                    txt1.setAttribute("value", arr[indx][3]);
-                    txt2.setAttribute("value", arr[indx][3]);
+                    const modelUrl = arr[indx][1];
+                    elem.setAttribute("gltf-model", modelUrl);
+                    elem.setAttribute("position", arr[indx][2]);
+                    elem.setAttribute("scale", arr[indx][3]);
+                    txt1.setAttribute("value", arr[indx][4]);
+                    txt2.setAttribute("value", arr[indx][4]);
+
+                    elem.addEventListener("model-loaded", () => {
+                        loading.style.display = "none"; // Hide loading indicator
+                    });
                 }
 
                 btn1.onclick = () => {
                     indx = (indx - 1 + arr.length) % arr.length;
-                    change();
+                    loadModel();
                 };
 
                 btn2.onclick = () => {
                     indx = (indx + 1) % arr.length;
-                    change();
+                    loadModel();
                 };
 
-                change();
+                loadModel();
             };
         </script>
     </body>
