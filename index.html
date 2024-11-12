@@ -4,36 +4,160 @@
         <script src="https://aframe.io/releases/0.8.2/aframe.min.js"></script>
         <script src="https://cdn.rawgit.com/jeromeetienne/AR.js/1.6.2/aframe/build/aframe-ar.js"></script>
         <style>
-            .btns {
-                position: absolute;
-                bottom: 20px;
-                left: 0;
+            .top,
+            .bottom {
+                position: fixed;
+                z-index: 10;
+                width: min(800px, calc(100vw - 20px));
+                padding: 10px;
+                left: 50%;
+                transform: translateX(-50%);
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .top {
+                top: 0;
+            }
+
+            .bottom {
+                bottom: 0;
+            }
+
+            .btn {
+                width: 50px !important;
+                height: 50px !important;
+                border-radius: 15px;
                 display: flex;
                 justify-content: center;
                 align-items: center;
-                gap: 10px;
-                width: 100vw;
+                background-color: white;
+                border: 2px solid black;
+                outline: none;
+                padding: 5px;
+                cursor: pointer;
+                transition: background-color 0.25s ease;
             }
-            button {
-                font-size: 24px;
+
+            #translate {
+                padding: 0;
             }
-            .loading {
+
+            .btn svg {
+                width: 28px !important;
+                height: 28px !important;
+                pointer-events: none;
+            }
+
+            #dish-name {
+                font-size: 32px;
+                font-weight: bold;
+                text-transform: uppercase;
+                font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+                color: white;
+            }
+
+            #file-inp {
                 position: absolute;
+                opacity: 0;
+                width: 100%;
+                height: 100%;
+                pointer-events: none;
+            }
+
+            #information-wrapper,
+            #dishes-list {
+                position: absolute;
+                top: 90px;
+                left: 50%;
+                transform: translateX(-50%);
+                width: min(800px, calc(100vw - 40px));
+                padding: 10px;
+                height: max-content;
+                max-height: calc(100vh - 180px);
+                overflow-y: scroll;
+                background-color: white;
+                border-radius: 15px;
+                display: none;
+                font-size: 22px;
+            }
+
+            #information-wrapper.active,
+            #dishes-list.active {
+                display: block;
+            }
+
+            #dishes-list li {
+                border: 2px solid black;
+                padding: 5px;
+                font-size: 24px;
+                margin-bottom: 10px;
+                text-align: center;
+                border-radius: 8px;
+                cursor: pointer;
+                transition: background-color 0.25s ease;
+            }
+
+            #dishes-list li:last-child {
+                margin-bottom: 0;
+            }
+
+            #dishes-list li:hover,
+            .btn:hover {
+                background-color: lightgray;
+            }
+
+            #loading {
+                position: fixed;
                 top: 50%;
                 left: 50%;
                 transform: translate(-50%, -50%);
-                font-size: 24px;
+                width: 50px;
+                height: 50px;
+                animation: rotate 1s ease 0s infinite forwards;
+                z-index: 100;
                 display: none;
+            }
+            #loading::before,
+            #loading::after {
+                content: "";
+                width: 10px;
+                height: 10px;
+                background-color: white;
+                border-radius: 50%;
+                position: absolute;
+                left: 50%;
+            }
+            #loading::before {
+                top: 0;
+                transform: translate(-50%, -50%);
+            }
+            #loading::after {
+                bottom: 0;
+                transform: translate(-50%, 50%);
+            }
+            #loading.active {
+                display: block;
+            }
+
+            @keyframes rotate {
+                from {
+                    transform: rotateZ(0deg);
+                }
+                to {
+                    transform: rotateZ(360deg);
+                }
             }
         </style>
     </head>
     <body style="margin: 0px; overflow: hidden">
-        <div class="loading" id="loading">Loading...</div>
+        <div class="loading active" id="loading"></div>
         <a-scene
             embedded
             arjs="sourceType: webcam; debugUIEnabled: false"
             vr-mode-ui="enabled: false"
-            renderer="logarithmicDepthBuffer: true"
+            renderer="antialias: true; logarithmicDepthBuffer: true; colorManagement: true; sortObjects: true;"
         >
             <a-assets></a-assets>
 
@@ -43,10 +167,11 @@
                     gltf-model=""
                     position="0 0 0"
                     scale=".1 .1 .1"
+                    material="depthTest: true; depthWrite: true;"
                 >
                     <a-animation
                         attribute="rotation"
-                        dur="10000"
+                        dur="20000"
                         to="0 360 0"
                         repeat="indefinite"
                         easing="linear"
@@ -54,7 +179,6 @@
                 </a-entity>
                 <a-text
                     id="txt1"
-                    value="Loading..."
                     align="center"
                     position="0 2 0"
                     width="5"
@@ -62,7 +186,6 @@
                 ></a-text>
                 <a-text
                     id="txt2"
-                    value="Loading..."
                     align="center"
                     position="0 2 0"
                     width="5"
@@ -73,120 +196,346 @@
 
             <a-entity camera></a-entity>
         </a-scene>
-        <div class="btns">
-            <button id="btn1">Previous</button>
-            <button id="btn2">Next</button>
+
+        <div class="top">
+            <div class="btn" id="translate">
+                <label for="file-inp">
+                    <svg
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                    >
+                        <path
+                            d="M11.9 22L16.45 10H18.55L23.1 22H21L19.925 18.95H15.075L14 22H11.9ZM4 19L2.6 17.6L7.65 12.55C7.06667 11.9667 6.5375 11.3 6.0625 10.55C5.5875 9.8 5.15 8.95 4.75 8H6.85C7.18333 8.65 7.51667 9.21667 7.85 9.7C8.18333 10.1833 8.58333 10.6667 9.05 11.15C9.6 10.6 10.1708 9.82917 10.7625 8.8375C11.3542 7.84583 11.8 6.9 12.1 6H1V4H8V2H10V4H17V6H14.1C13.75 7.2 13.225 8.43333 12.525 9.7C11.825 10.9667 11.1333 11.9333 10.45 12.6L12.85 15.05L12.1 17.1L9.05 13.975L4 19ZM15.7 17.2H19.3L17.5 12.1L15.7 17.2Z"
+                            fill="black"
+                        />
+                    </svg>
+                </label>
+                <input
+                    name="file-inp"
+                    id="file-inp"
+                    type="file"
+                    accept="image/*"
+                />
+            </div>
+
+            <h1 id="dish-name"></h1>
+
+            <button class="btn" id="btn-information">
+                <svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                >
+                    <path
+                        d="M11 17H13V11H11V17ZM12 9C12.2833 9 12.5208 8.90417 12.7125 8.7125C12.9042 8.52083 13 8.28333 13 8C13 7.71667 12.9042 7.47917 12.7125 7.2875C12.5208 7.09583 12.2833 7 12 7C11.7167 7 11.4792 7.09583 11.2875 7.2875C11.0958 7.47917 11 7.71667 11 8C11 8.28333 11.0958 8.52083 11.2875 8.7125C11.4792 8.90417 11.7167 9 12 9ZM12 22C10.6167 22 9.31667 21.7375 8.1 21.2125C6.88333 20.6875 5.825 19.975 4.925 19.075C4.025 18.175 3.3125 17.1167 2.7875 15.9C2.2625 14.6833 2 13.3833 2 12C2 10.6167 2.2625 9.31667 2.7875 8.1C3.3125 6.88333 4.025 5.825 4.925 4.925C5.825 4.025 6.88333 3.3125 8.1 2.7875C9.31667 2.2625 10.6167 2 12 2C13.3833 2 14.6833 2.2625 15.9 2.7875C17.1167 3.3125 18.175 4.025 19.075 4.925C19.975 5.825 20.6875 6.88333 21.2125 8.1C21.7375 9.31667 22 10.6167 22 12C22 13.3833 21.7375 14.6833 21.2125 15.9C20.6875 17.1167 19.975 18.175 19.075 19.075C18.175 19.975 17.1167 20.6875 15.9 21.2125C14.6833 21.7375 13.3833 22 12 22ZM12 20C14.2333 20 16.125 19.225 17.675 17.675C19.225 16.125 20 14.2333 20 12C20 9.76667 19.225 7.875 17.675 6.325C16.125 4.775 14.2333 4 12 4C9.76667 4 7.875 4.775 6.325 6.325C4.775 7.875 4 9.76667 4 12C4 14.2333 4.775 16.125 6.325 17.675C7.875 19.225 9.76667 20 12 20Z"
+                        fill="black"
+                    />
+                </svg>
+            </button>
         </div>
+
+        <div class="bottom">
+            <button class="btn" id="btn-left">
+                <svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                >
+                    <path
+                        d="M16 22L6 12L16 2L17.775 3.775L9.55 12L17.775 20.225L16 22Z"
+                        fill="black"
+                    />
+                </svg>
+            </button>
+            <button class="btn" id="btn-list">
+                <svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                >
+                    <path
+                        d="M9 19V17H21V19H9ZM9 13V11H21V13H9ZM9 7V5H21V7H9ZM5 20C4.45 20 3.97917 19.8042 3.5875 19.4125C3.19583 19.0208 3 18.55 3 18C3 17.45 3.19583 16.9792 3.5875 16.5875C3.97917 16.1958 4.45 16 5 16C5.55 16 6.02083 16.1958 6.4125 16.5875C6.80417 16.9792 7 17.45 7 18C7 18.55 6.80417 19.0208 6.4125 19.4125C6.02083 19.8042 5.55 20 5 20ZM5 14C4.45 14 3.97917 13.8042 3.5875 13.4125C3.19583 13.0208 3 12.55 3 12C3 11.45 3.19583 10.9792 3.5875 10.5875C3.97917 10.1958 4.45 10 5 10C5.55 10 6.02083 10.1958 6.4125 10.5875C6.80417 10.9792 7 11.45 7 12C7 12.55 6.80417 13.0208 6.4125 13.4125C6.02083 13.8042 5.55 14 5 14ZM5 8C4.45 8 3.97917 7.80417 3.5875 7.4125C3.19583 7.02083 3 6.55 3 6C3 5.45 3.19583 4.97917 3.5875 4.5875C3.97917 4.19583 4.45 4 5 4C5.55 4 6.02083 4.19583 6.4125 4.5875C6.80417 4.97917 7 5.45 7 6C7 6.55 6.80417 7.02083 6.4125 7.4125C6.02083 7.80417 5.55 8 5 8Z"
+                        fill="black"
+                    />
+                </svg>
+            </button>
+            <button class="btn" id="btn-right">
+                <svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                >
+                    <path
+                        d="M8.025 22L6.25 20.225L14.475 12L6.25 3.775L8.025 2L18.025 12L8.025 22Z"
+                        fill="black"
+                    />
+                </svg>
+            </button>
+        </div>
+
+        <div id="information-wrapper"></div>
+        <ul id="dishes-list"></ul>
+
         <script>
+            // [name, path, position, scale, tag]
+            const MODELS = [
+                [
+                    "idali",
+                    "/models/idali.glb",
+                    "0 0 0",
+                    "2.5 2.5 2.5",
+                    "Idali - 40 Rs",
+                    "A popular South Indian breakfast dish made from a fermented rice and lentil batter, steamed into soft, fluffy cakes. Served with coconut chutney and sambar, idlis are light, healthy, and nutritious, ideal for a filling start to the day.",
+                ],
+                [
+                    "chicken",
+                    "/models/chicken.glb",
+                    "0 0 0",
+                    "10 10 10",
+                    "Chicken Rice - 120 Rs",
+                    "A comforting and balanced dish of tender, spiced chicken served with fragrant steamed rice. Often accompanied by a spicy chutney or curry sauce, this dish makes for a satisfying and flavorful meal.",
+                ],
+                [
+                    "biryani",
+                    "/models/biryani.glb",
+                    "0 0 0",
+                    "2.5 2.5 2.5",
+                    "Biryani - 180 Rs",
+                    "An aromatic rice dish layered with marinated meat, typically chicken or mutton, and infused with spices. Biryani is slow-cooked to achieve a unique blend of rich flavors, making it a celebrated dish for festive occasions.",
+                ],
+                [
+                    "curry",
+                    "/models/curry.glb",
+                    "0 0 0",
+                    ".4 .4 .4",
+                    "Curry - 100 Rs",
+                    "A hearty and flavorful dish made with a rich blend of spices, tomatoes, and onions. Often enjoyed with rice or bread, curry provides a warm, comforting meal with a satisfying depth of flavor.",
+                ],
+                [
+                    "stew",
+                    "/models/stew.glb",
+                    "0 0 0",
+                    ".8 .8 .8",
+                    "Stew - 150 Rs",
+                    "A nourishing one-pot meal combining tender meat, vegetables, and a blend of spices simmered in a flavorful broth. Perfect for colder days, stew offers a comforting blend of textures and hearty flavors.",
+                ],
+                [
+                    "fried-rice",
+                    "/models/fried-rice.glb",
+                    "0 0 0",
+                    ".01 .01 .01",
+                    "Fried Rice - 80 Rs",
+                    "A savory stir-fried rice dish mixed with vegetables, eggs, and occasionally meat, seasoned with soy sauce and spices. Quick to prepare and full of flavor, fried rice is a favorite for those looking for a satisfying meal.",
+                ],
+                [
+                    "omelette",
+                    "/models/omelette.glb",
+                    "0 0 0",
+                    ".25 .25 .25",
+                    "Omelette - 50 Rs",
+                    "A fluffy, protein-rich dish made from beaten eggs, often filled with cheese, herbs, or vegetables. Omelettes are versatile and quick to prepare, making them a popular breakfast choice around the world.",
+                ],
+                [
+                    "pizza",
+                    "/models/pizza.glb",
+                    "0 0 0",
+                    "8 8 8",
+                    "Pizza - 160 Rs",
+                    "A classic Italian-inspired dish with a crispy crust topped with tomato sauce, cheese, and various toppings such as vegetables, meats, and herbs. Pizza is perfect for sharing with friends or family, delivering savory and cheesy flavors in every bite.",
+                ],
+                [
+                    "sandwich",
+                    "/models/sandwich.glb",
+                    "0 0 0",
+                    ".1 .1 .1",
+                    "Sandwich - 100 Rs",
+                    "A convenient, layered meal with fresh vegetables, cheese, and meats between slices of bread. Customizable and portable, sandwiches are a quick option for a satisfying and balanced snack or meal.",
+                ],
+            ];
+
             window.onload = () => {
+                const sceneEl = document.querySelector("a-scene");
+
+                sceneEl.addEventListener("loaded", function () {
+                    const newCamera = new THREE.PerspectiveCamera();
+                    newCamera.near = 1;
+                    newCamera.far = 100;
+                    sceneEl.camera = newCamera;
+                });
+
                 const elem = document.getElementById("model-entity");
-                const btn1 = document.getElementById("btn1");
-                const btn2 = document.getElementById("btn2");
+                const dishName = document.getElementById("dish-name");
+                const fileInput = document.getElementById("file-inp");
+                const btnInformation =
+                    document.getElementById("btn-information");
+                const informationWrapper = document.getElementById(
+                    "information-wrapper"
+                );
+                const dishesList = document.getElementById("dishes-list");
+                const btnList = document.getElementById("btn-list");
+                const btnLeft = document.getElementById("btn-left");
+                const btnRight = document.getElementById("btn-right");
                 const txt1 = document.getElementById("txt1");
                 const txt2 = document.getElementById("txt2");
                 const loading = document.getElementById("loading");
                 let indx = 0;
 
-                const arr = [
-                    [
-                        "curry",
-                        "models/curry.glb",
-                        "0 0 0",
-                        ".4 .4 .4",
-                        "Curry - 100 Rs",
-                    ],
-                    [
-                        "chicken-meal",
-                        "models/chicken-meal.glb",
-                        "0 0 0",
-                        "10 10 10",
-                        "Chicken Meal - 250 Rs",
-                    ],
-                    [
-                        "food",
-                        "models/food.glb",
-                        "0 0 0",
-                        "2 2 2",
-                        "I Don't Know - 150 Rs",
-                    ],
-                    [
-                        "milk-cookies",
-                        "models/milk-cookies.glb",
-                        "0 0 0",
-                        "10 10 10",
-                        "Milk & Cookies - 60 Rs",
-                    ],
-                    [
-                        "momos",
-                        "models/momos.glb",
-                        "0 0 0",
-                        "10 10 10",
-                        "Momos - 80 Rs",
-                    ],
-                    [
-                        "pizza",
-                        "models/pizza.glb",
-                        "0 0 0",
-                        "8 8 8",
-                        "Pizza - 160 Rs",
-                    ],
-                    [
-                        "rice-bowl",
-                        "models/rice-bowl.glb",
-                        "0 0 0",
-                        ".3 .3 .3",
-                        "Rice - 120 Rs",
-                    ],
-                    [
-                        "roti-canai",
-                        "models/roti-canai.glb",
-                        "0 0 0",
-                        "1 1 1",
-                        "Roti Sabji - 180 Rs",
-                    ],
-                    [
-                        "sandwich",
-                        "models/sandwich.glb",
-                        "0 0 0",
-                        ".1 .1 .1",
-                        "Sandwich - 100 Rs",
-                    ],
-                    [
-                        "omelette",
-                        "models/omelette.glb",
-                        "0 0 0",
-                        "10 10 10",
-                        "Omelette - 50 Rs",
-                    ],
-                ];
+                let arr = MODELS;
+
+                const init = () => {
+                    dishesList.innerHTML = "";
+                    arr.forEach((val, i) => {
+                        const li = document.createElement("li");
+                        li.innerText = val[4];
+                        li.onclick = () => {
+                            indx = i;
+                            loadModel();
+                            dishesList.classList.remove("active");
+                        };
+                        dishesList.appendChild(li);
+                    });
+                };
+
+                const handleFetch = (event) => {
+                    event.preventDefault();
+                    const file = event.target.files[0];
+
+                    if (file) {
+                        loading.classList.add("active");
+                        const formData = new FormData();
+                        formData.append("file", file);
+
+                        // put your ip address
+                        fetch("http://192.168.1.67:8000/upload-menu/", {
+                            method: "POST",
+                            body: formData,
+                        })
+                            .then((response) => response.json())
+                            .then((data) => {
+                                if (data.menu) {
+                                    console.log("Translated Menu:", data.menu);
+
+                                    // Filter MODELS to include only items that match keys in data.menu
+                                    let arr = MODELS.filter((val) => {
+                                        return Object.keys(data.menu).some(
+                                            (key) =>
+                                                val[0]
+                                                    .toLowerCase()
+                                                    .includes(key.toLowerCase())
+                                        );
+                                    });
+
+                                    // Update the filtered array with the menu prices from data.menu
+                                    arr = arr.map((val) => {
+                                        for (const key of Object.keys(
+                                            data.menu
+                                        )) {
+                                            if (
+                                                val[0]
+                                                    .toLowerCase()
+                                                    .includes(key.toLowerCase())
+                                            ) {
+                                                val[4] = `${val[0][0].toUpperCase()}${val[0].slice(
+                                                    1
+                                                )} - ${data.menu[key]}`;
+                                            }
+                                        }
+                                        return val;
+                                    });
+
+                                    console.log(arr);
+                                    init();
+                                    if (arr.length == 0)
+                                        dishesList.classList.add("active"); // Assuming init() initializes something in your app
+                                    indx = 0; // Resetting the index
+                                    loadModel(); // Loading the model after filtering
+                                    alert("Menu translated successfully!");
+                                } else {
+                                    alert("Error: Menu translation failed.");
+                                }
+                            })
+                            .catch((error) => {
+                                console.error("Error:", error);
+                                alert(error.message);
+                            })
+                            .finally(() => {
+                                loading.classList.remove("active");
+                            });
+                    }
+                };
+
+                fileInput.onchange = handleFetch;
+
+                btnList.onclick = () => {
+                    if (arr.length == 0) return;
+                    dishesList.classList.toggle("active");
+                };
+
+                btnInformation.onclick = () => {
+                    if (arr.length == 0) return;
+                    informationWrapper.classList.toggle("active");
+                };
 
                 function loadModel() {
-                    loading.style.display = "block"; // Show loading indicator
-                    const modelId = arr[indx][0];
-                    const modelUrl = arr[indx][1];
-                    elem.setAttribute("gltf-model", modelUrl);
+                    if (arr.length == 0) return;
+                    loading.classList.add("active");
+                    txt1.setAttribute("value", "Loading...");
+                    txt2.setAttribute("value", "Loading...");
+                    // dishName.innerText = "Loading...";
+
+                    elem.setAttribute("gltf-model", arr[indx][1]);
                     elem.setAttribute("position", arr[indx][2]);
                     elem.setAttribute("scale", arr[indx][3]);
-                    txt1.setAttribute("value", arr[indx][4]);
-                    txt2.setAttribute("value", arr[indx][4]);
 
                     elem.addEventListener("model-loaded", () => {
-                        loading.style.display = "none"; // Hide loading indicator
+                        dishName.innerText = arr[indx][0];
+                        txt1.setAttribute("value", arr[indx][4]);
+                        txt2.setAttribute("value", arr[indx][4]);
+                        informationWrapper.innerText = arr[indx][5];
+                        loading.classList.remove("active");
                     });
                 }
 
-                btn1.onclick = () => {
-                    indx = (indx - 1 + arr.length) % arr.length;
+                btnLeft.onclick = () => {
+                    indx--;
+                    if (indx < 0) indx = arr.length - 1;
                     loadModel();
                 };
 
-                btn2.onclick = () => {
-                    indx = (indx + 1) % arr.length;
+                btnRight.onclick = () => {
+                    indx++;
+                    if (indx >= arr.length) indx = 0;
                     loadModel();
                 };
 
+                init();
                 loadModel();
             };
         </script>
     </body>
 </html>
+
+<!-- 
+
+idali
+chicken
+biryani
+curry
+stew
+fried-rice
+omelette
+pizza
+sandwich
+
+-->
