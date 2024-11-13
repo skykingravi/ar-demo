@@ -291,6 +291,38 @@
             // [name, path, position, scale, tag]
             const MODELS = [
                 [
+                    "curry",
+                    "/models/curry.glb",
+                    "0 0 0",
+                    ".4 .4 .4",
+                    "Curry - 100 Rs",
+                    "A hearty and flavorful dish made with a rich blend of spices, tomatoes, and onions. Often enjoyed with rice or bread, curry provides a warm, comforting meal with a satisfying depth of flavor.",
+                ],
+                [
+                    "stew",
+                    "/models/stew.glb",
+                    "0 0 0",
+                    "1.5 1.5 1.5",
+                    "Stew - 150 Rs",
+                    "A nourishing one-pot meal combining tender meat, vegetables, and a blend of spices simmered in a flavorful broth. Perfect for colder days, stew offers a comforting blend of textures and hearty flavors.",
+                ],
+                [
+                    "fried-rice",
+                    "/models/fried-rice.glb",
+                    "0 1 0",
+                    ".02 .02 .02",
+                    "Fried Rice - 80 Rs",
+                    "A savory stir-fried rice dish mixed with vegetables, eggs, and occasionally meat, seasoned with soy sauce and spices. Quick to prepare and full of flavor, fried rice is a favorite for those looking for a satisfying meal.",
+                ],
+                [
+                    "omelette",
+                    "/models/omelette.glb",
+                    "0 0 0",
+                    ".25 .25 .25",
+                    "Omelette - 50 Rs",
+                    "A fluffy, protein-rich dish made from beaten eggs, often filled with cheese, herbs, or vegetables. Omelettes are versatile and quick to prepare, making them a popular breakfast choice around the world.",
+                ],
+                [
                     "idali",
                     "/models/idali.glb",
                     "0 0 0",
@@ -315,38 +347,6 @@
                     "An aromatic rice dish layered with marinated meat, typically chicken or mutton, and infused with spices. Biryani is slow-cooked to achieve a unique blend of rich flavors, making it a celebrated dish for festive occasions.",
                 ],
                 [
-                    "curry",
-                    "/models/curry.glb",
-                    "0 0 0",
-                    ".4 .4 .4",
-                    "Curry - 100 Rs",
-                    "A hearty and flavorful dish made with a rich blend of spices, tomatoes, and onions. Often enjoyed with rice or bread, curry provides a warm, comforting meal with a satisfying depth of flavor.",
-                ],
-                [
-                    "stew",
-                    "/models/stew.glb",
-                    "0 0 0",
-                    ".8 .8 .8",
-                    "Stew - 150 Rs",
-                    "A nourishing one-pot meal combining tender meat, vegetables, and a blend of spices simmered in a flavorful broth. Perfect for colder days, stew offers a comforting blend of textures and hearty flavors.",
-                ],
-                [
-                    "fried-rice",
-                    "/models/fried-rice.glb",
-                    "0 0 0",
-                    ".01 .01 .01",
-                    "Fried Rice - 80 Rs",
-                    "A savory stir-fried rice dish mixed with vegetables, eggs, and occasionally meat, seasoned with soy sauce and spices. Quick to prepare and full of flavor, fried rice is a favorite for those looking for a satisfying meal.",
-                ],
-                [
-                    "omelette",
-                    "/models/omelette.glb",
-                    "0 0 0",
-                    ".25 .25 .25",
-                    "Omelette - 50 Rs",
-                    "A fluffy, protein-rich dish made from beaten eggs, often filled with cheese, herbs, or vegetables. Omelettes are versatile and quick to prepare, making them a popular breakfast choice around the world.",
-                ],
-                [
                     "pizza",
                     "/models/pizza.glb",
                     "0 0 0",
@@ -359,7 +359,7 @@
                     "/models/sandwich.glb",
                     "0 0 0",
                     ".1 .1 .1",
-                    "Sandwich - 100 Rs",
+                    "Sandwich - 99 Rs",
                     "A convenient, layered meal with fresh vegetables, cheese, and meats between slices of bread. Customizable and portable, sandwiches are a quick option for a satisfying and balanced snack or meal.",
                 ],
             ];
@@ -427,14 +427,18 @@
                                     console.log("Translated Menu:", data.menu);
 
                                     // Filter MODELS to include only items that match keys in data.menu
-                                    let arr = MODELS.filter((val) => {
-                                        return Object.keys(data.menu).some(
-                                            (key) =>
+                                    arr = [];
+                                    for (const key of Object.keys(data.menu)) {
+                                        MODELS.forEach((val) => {
+                                            if (
                                                 val[0]
                                                     .toLowerCase()
                                                     .includes(key.toLowerCase())
-                                        );
-                                    });
+                                            ) {
+                                                arr.push(val);
+                                            }
+                                        });
+                                    }
 
                                     // Update the filtered array with the menu prices from data.menu
                                     arr = arr.map((val) => {

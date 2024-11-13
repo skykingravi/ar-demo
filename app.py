@@ -32,7 +32,7 @@ def preprocess_image(image: Image.Image) -> Image.Image:
 # Extract dish names and prices from image using OCR
 def extract_text_from_image(image: Image.Image) -> dict:
     ocr_text = pytesseract.image_to_string(image, lang='mal')
-    print(ocr_text)
+    # print(ocr_text)
     menu_items = {}
     lines = ocr_text.splitlines()
 
@@ -43,7 +43,7 @@ def extract_text_from_image(image: Image.Image) -> dict:
             dish_name = match.group(1).strip()
             price = match.group(2).strip()
             menu_items[dish_name] = price
-    print(menu_items)
+    # print(menu_items)
     return menu_items
 
 # Translate Malayalam text to English using unofficial Google Translate API
@@ -68,6 +68,7 @@ def translate_menu(menu_items: dict) -> dict:
     translated_menu = {}
     for dish_name, price in menu_items.items():
         translated_dish_name = translate_to_english(dish_name)
+        print(translated_dish_name)
         translated_menu[translated_dish_name] = price
     return translated_menu
 
@@ -76,11 +77,11 @@ def translate_menu(menu_items: dict) -> dict:
 async def upload_menu(file: UploadFile = File(...)):
     try:
         print({"filename": file.filename, "size": len(await file.read())})
-        save_path = f"temp/{file.filename}"
+        # save_path = f"temp/{file.filename}"
 
         # Save the image file locally
-        with open(save_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
+        # with open(save_path, "wb") as buffer:
+        #     shutil.copyfileobj(file.file, buffer)
 
         # Open the image file
         image = Image.open(file.file)
